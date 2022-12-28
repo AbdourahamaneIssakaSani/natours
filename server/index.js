@@ -1,6 +1,6 @@
 const express = require("express");
 const logger = require("morgan");
-const tourRouter = require("./routes/tourRoutes");
+const tourRouter = require("./routes/tour.routes");
 
 const PORT = 9000;
 
