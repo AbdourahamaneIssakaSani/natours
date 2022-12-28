@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "@natours/server",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -7,6 +7,9 @@
     "start": "nodemon index.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongoose": "^6.8.0",
+    "morgan": "^1.10.0"
   }
 }
