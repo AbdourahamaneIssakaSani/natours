@@ -1,10 +1,20 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const logger = require("morgan");
+const authRouter = require("./routes/auth.routes");
 const tourRouter = require("./routes/tour.routes");
 
-const PORT = 9000;
+require("dotenv").config();
+
+const PORT = process.env.PORT || 9000;
 
 const app = express();
+
+const DB = process.env.MONGO_URI;
+mongoose.connect(DB, {
+  useNewUrlParser: true,
+});
+
 const cors = require("cors");
 
 app.use(cors());
@@ -18,9 +28,13 @@ var requestTime = function (req, res, next) {
 
 app.use(requestTime);
 
-app.use("/api/v1/users", tourRouter);
+app.use("/api/v1/auth", authRouter);
+// app.use("/api/v1/users", tourRouter);
 app.use("/api/v1/tours", tourRouter);
 
+app.get("/", (req, res) => {
+  res.end("Hello");
+});
 // Middleware for 404 routes
 app.all("*", (req, res, next) => {
   next(new Error(`Can’t find ${req.originalUrl} on this server`));
