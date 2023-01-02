@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ["tourist", "guide", "lead-guide", "admin"],
-    default: "user",
+    default: "tourist",
   },
   password: {
     type: String,
@@ -29,8 +29,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please confirm your password"],
     validate: {
-      validator: function (passwordConfirm) {
-        passwordConfirm === this.password;
+      validator: function (pwdConfirm) {
+        return pwdConfirm === this.password;
       },
     },
   },
@@ -40,11 +40,11 @@ const userSchema = new mongoose.Schema({
 // DOCUMENT MIDDLEWARE
 userSchema.pre("save", async function (next) {
   // if the password is not new, skip this middleware
-  if (this.isModified("password")) return next();
+  if (!this.isModified("password")) return next();
 
   this.password = await argon.hash(this.password);
   //   no need to save this
-  passwordConfirm = undefined;
+  this.passwordConfirm = undefined;
   next();
 });
 

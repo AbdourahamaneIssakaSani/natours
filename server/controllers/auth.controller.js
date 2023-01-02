@@ -1,26 +1,28 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const handleAsync = require("../utils/async.handler");
+const AppError = require("../utils/app-error");
 
 /**
  * Sign jwt token
  * @param {Object} payload jwt payload object
- * @returns
+ * @returns {String}
  */
 const signJWTToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
 /**
- *
- * @param {*} user
- * @param {*} statusCode
- * @param {*} res
+ * Sends access token for signup and login.
+ * @param {User} user
+ * @param {Number} statusCode
+ * @param {Response} res
  */
 const sendToken = (user, statusCode, res) => {
   const payload = { id: user._id };
-  const token = signJWTToken(payload);
+  const accessToken = signJWTToken(payload);
 
   // TODO: set cookies
 
@@ -29,12 +31,15 @@ const sendToken = (user, statusCode, res) => {
 
   res.status(statusCode).json({
     status: "success",
-    accesToken,
+    accessToken,
     data: { user },
   });
 };
 
-exports.signup = async (req, res) => {
+/**
+ * Creates a new user account.
+ */
+exports.signup = handleAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -43,14 +48,38 @@ exports.signup = async (req, res) => {
   });
 
   sendToken(newUser, 201, res);
-};
+});
 
-exports.login = async (req, res) => {
+/**
+ * Login a user with email and password.
+ */
+exports.login = handleAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    throw Error("Please provide email/password");
+    next(new AppError("Please provide email/password", 400));
   }
 
   const user = await User.findOne({ email });
-};
+
+  if (!user || !(await user.verifyPassword(password, user.password))) {
+    next(new AppError("Incorrect email or password", 401));
+  }
+
+  sendToken(user, 200, res);
+});
+
+/**
+ * Logout a user.
+ */
+exports.logout = handleAsync(async (req, res, next) => {});
+
+/**
+ *
+ */
+exports.forgotPassword = handleAsync(async (req, res, next) => {});
+
+/**
+ *
+ */
+exports.resetPassword = handleAsync(async (req, res, next) => {});

@@ -8,9 +8,9 @@ const router = express.Router();
 
 router.post("/signup", AuthController.signup);
 router.post("/login", AuthController.login);
-// router.post("/logout", AuthController.logout);
-// router.post("/forgot-pwd", AuthController.forgotPassword);
-// router.post("/reset-pwd", AutController.resetPassword);
+router.post("/logout", AuthController.logout);
+router.post("/forgot-pwd", AuthController.forgotPassword);
+router.post("/reset-pwd", AuthController.resetPassword);
 
 // // protect routes below
 // router.use(AuthGuard.protect);
