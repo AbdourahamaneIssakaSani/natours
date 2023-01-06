@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const handleAsync = require("../utils/async.handler");
 const AppError = require("../utils/app-error");
 
@@ -57,13 +58,13 @@ exports.login = handleAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    next(new AppError("Please provide email/password", 400));
+    return next(new AppError("Please provide email/password", 400));
   }
 
   const user = await User.findOne({ email });
 
-  if (!user || !(await user.verifyPassword(password, user.password))) {
-    next(new AppError("Incorrect email or password", 401));
+  if (!user || !(await user.verifyPassword(password))) {
+    return next(new AppError("Incorrect email or password", 401));
   }
 
   sendToken(user, 200, res);
@@ -75,11 +76,84 @@ exports.login = handleAsync(async (req, res, next) => {
 exports.logout = handleAsync(async (req, res, next) => {});
 
 /**
- *
+ * Treats a case when the user forgets the password
  */
-exports.forgotPassword = handleAsync(async (req, res, next) => {});
+exports.forgotPassword = handleAsync(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppError("User with that email does not exist", 404));
+  }
+  const resetToken = user.createResetPasswordToken();
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/auth/reset-pwd/${resetToken}`;
+  // send email
+
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    resetToken,
+    resetUrl,
+  });
+
+  // res.status(200).json({
+  //   status: 'success',
+  //   message: 'A password reset link has been sent to your email!'
+  // });
+});
 
 /**
- *
+ * Reset password of a user
  */
-exports.resetPassword = handleAsync(async (req, res, next) => {});
+exports.resetPassword = handleAsync(async (req, res, next) => {
+  // create hash and get user who has it
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError("Token expired or invalid", 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Password has been reset successfully",
+  });
+});
+
+/**
+ * Updates password of a user
+ */
+exports.updatePassword = handleAsync(async (req, res, next) => {
+  const user = await User.findById(req.body.id);
+
+  if (!(await user.verifyPassword(req.body.currentPassword))) {
+    return next(
+      new AppError("Your current password is wrong. Reset it or try again", 401)
+    );
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+
+  await user.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Password has been changed successfully",
+  });
+});

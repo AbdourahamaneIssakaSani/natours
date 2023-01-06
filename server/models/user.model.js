@@ -1,6 +1,5 @@
 const argon = require("argon2");
-const IDGenerators = require("id-generators");
-const IDGenerator = IDGenerators.get("nanoid");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
@@ -39,6 +38,12 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: {
     type: Date,
     default: Date.now(),
+  },
+  passwordResetToken: {
+    type: String,
+  },
+  passwordResetTokenExpires: {
+    type: Date,
   },
 });
 
@@ -95,8 +100,19 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
  * Generates a reset password token.
  */
 userSchema.methods.createResetPasswordToken = function () {
-  const resetToken = IDGenerator().generate();
-  console.log(resetToken);
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  // hash it and save to db
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetTokenExpires = Date.now() + 60 * 1000 * 10; // date now + 10min
+
+  console.log(resetToken, this.passwordResetToken);
+
+  return resetToken;
 };
 
 const User = mongoose.model("Users", userSchema);
