@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const handleAsync = require("../utils/async.handler");
 const AppError = require("../utils/app-error");
+const EmailServices = require("../utils/email.service");
 
 /**
  * Sign jwt token
@@ -88,19 +89,24 @@ exports.forgotPassword = handleAsync(async (req, res, next) => {
   const resetUrl = `${req.protocol}://${req.get(
     "host"
   )}/api/v1/auth/reset-pwd/${resetToken}`;
-  // send email
 
   await user.save({ validateBeforeSave: false });
 
-  res.status(200).json({
-    resetToken,
-    resetUrl,
+  await EmailServices.sendWithNodeMailer({
+    email: user.email,
+    subject: "Your password reset URL",
+    message: `Forgot your password ? Click on this link ${resetUrl}`,
   });
 
   // res.status(200).json({
-  //   status: 'success',
-  //   message: 'A password reset link has been sent to your email!'
+  //   resetToken,
+  //   resetUrl,
   // });
+
+  res.status(200).json({
+    status: "success",
+    message: "A password reset link has been sent to your email!",
+  });
 });
 
 /**
@@ -141,7 +147,7 @@ exports.resetPassword = handleAsync(async (req, res, next) => {
 exports.updatePassword = handleAsync(async (req, res, next) => {
   const user = await User.findById(req.body.id);
 
-  if (!(await user.verifyPassword(req.body.currentPassword))) {
+  if (!user || !(await user.verifyPassword(req.body.currentPassword))) {
     return next(
       new AppError("Your current password is wrong. Reset it or try again", 401)
     );

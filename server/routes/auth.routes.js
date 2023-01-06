@@ -12,7 +12,7 @@ router.post("/logout", AuthController.logout);
 router.post("/forgot-pwd", AuthController.forgotPassword);
 router.patch("/reset-pwd/:token", AuthController.resetPassword);
 
-// // protect routes below
+//  protect routes below
 router.use(AuthGuard.protect);
 router.patch("/update-pwd", AuthController.updatePassword);
 
