@@ -37,6 +37,24 @@ function sendProductionError(err, res) {
   }
 }
 
+/**
+ * Handles error for invalid jwt token.
+ * @param {Error} err
+ * @returns {AppError}
+ */
+function handleJWTError(err) {
+  return new AppError("Invalid token", 401);
+}
+
+/**
+ * Handles error for expired jwt token.
+ * @param {Error} err
+ * @returns {AppError}
+ */
+function handleJWTExpiredError(err) {
+  return new AppError("Token expired, login again", 401);
+}
+
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
@@ -48,8 +66,6 @@ module.exports = (err, req, res, next) => {
 
     let error = Object.create(err, Object.getOwnPropertyDescriptors(err));
 
-    // if (error.name === "CastError")
-
     if (error.name === "ValidationError")
       error = MongooseAppError.handleValidationError(error);
 
@@ -58,6 +74,11 @@ module.exports = (err, req, res, next) => {
 
     if (error.code === 11000)
       error = MongooseAppError.handleDuplicateField(error);
+
+    if (error.name === "JsonWebTokenError") error = handleJWTError(error);
+
+    if (error.name === "TokenExpiredError")
+      error = handleJWTExpiredError(error);
 
     sendProductionError(error, res);
 
