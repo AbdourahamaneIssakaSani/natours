@@ -26,14 +26,21 @@ const sendToken = (user, statusCode, res) => {
   const payload = { id: user._id };
   const accessToken = signJWTToken(payload);
 
-  // TODO: set cookies
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  res.cookie("accessToken", accessToken, cookieOptions);
 
   // removes the password value before responding
   user.password = undefined;
 
   res.status(statusCode).json({
     status: "success",
-    accessToken,
     data: { user },
   });
 };
