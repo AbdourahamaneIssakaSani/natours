@@ -1,12 +1,18 @@
 const nodemailer = require("nodemailer");
 
 /**
- * Represents email services (nodemailer or sendgrid)
- */
+
+EmailServices class is responsible for sending emails to users.
+It currently supports sending emails through NodeMailer.
+*/
+
 class EmailServices {
   /**
-   * Sends email to a user, using nodemailer
-   * @param {*} options
+   * Sends an email to the provided recipient using NodeMailer
+   * @param {Object} options - options for the email
+   * @param {String} options.email - recipient email address
+   * @param {String} options.subject - subject of the email
+   * @param {String} options.message - message body of the email
    */
   static async sendWithNodeMailer(options) {
     const transporter = nodemailer.createTransport({
