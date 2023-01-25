@@ -5,7 +5,9 @@ const handleAsync = require("../utils/async.handler");
 const User = require("../models/user.model");
 
 /**
- * Protects routes
+ * Protects routes by checking for the presence of a valid JWT token in the request headers.
+ * If a token is present, it is verified and the user associated with the token is added to the request object.
+ * If no token is present, or if the token is invalid, an error is returned.
  */
 exports.protect = handleAsync(async (req, res, next) => {
   let accessToken;
@@ -43,8 +45,9 @@ exports.protect = handleAsync(async (req, res, next) => {
 
 /**
  * Verifies if the user has access rights to a route.
- * @param  {...any} roles list of roles for a route
- * @returns
+ *
+ * @param {...string} roles list of roles for a route
+ * @returns {function} middleware function that checks if the user's role is in the list of allowed roles
  */
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
