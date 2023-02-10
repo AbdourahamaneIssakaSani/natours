@@ -4,12 +4,25 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "NODE_ENV=development nodemon index.js",
+    "start:staging": "NODE_ENV=staging nodemon index.js",
+    "start:prod": "NODE_ENV=production node index.js"
   },
   "dependencies": {
+    "argon2": "^0.30.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^6.0.1",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.8.0",
+    "winston": "^3.8.2",
+    "winston-mongodb": "^5.1.1",
+    "xss-clean": "^0.1.1"
   }
 }
